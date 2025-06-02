@@ -102,7 +102,6 @@ class GeneticAlg {
       sumOfProbs += prob;
     }
 
-    console.log(this.populationSize);
     while (newPopulation.length < this.populationSize) {
       var parent1 = this.selectIndividual(probabilities, sumOfProbs);
       var parent2 = this.selectIndividual(probabilities, sumOfProbs);
@@ -139,9 +138,9 @@ class GeneticAlg {
     this.scorePopulation();
   }
 
+  // selects an individual from the population based on the probabilies, this means some (ie fitter)individuals have a bigger chance of being selected than others.
   selectIndividual(probabilities, sumOfProbs) {
     var locator = this.random.next() * sumOfProbs;
-    console.log("length = " + probabilities.length + " sum = " + sumOfProbs);
     for (var i = 0; probabilities.length; i++) {
       if (locator < probabilities[i]) {
         return this.population[i];
@@ -167,6 +166,7 @@ function defaultFitnessFunction(individual) {
 
   var indvSet = new Set(individual);
   if (indvSet.length != individual.length) {
+    //same sell is allocated twice, massive score
     fitness += SCORE_DUPLICATE_CELL_ALLOCATION;
   }
   suiteList = new Set();
@@ -178,6 +178,7 @@ function defaultFitnessFunction(individual) {
     suiteList.add(cell.suite);
 
     if (detainee.dryRequired && !cell.dry) {
+      // the detanee needa a dry cell, but we have not allocated one
       fitness += SCORE_DRY_REQUIRED_BUT_NOT_DELIVERED;
     }
     if (detainee.juvenile && !cell.dry) {
@@ -185,6 +186,7 @@ function defaultFitnessFunction(individual) {
       fitness += SCORE_DRY_JUVENILE_PREFERED_BUT_NOT_DELIVERED;
     }
     if (detainee.gender != cell.type) {
+      //we have not allocated the correct gender of cell
       fitness += SCORE_INCORRECT_GENDER_ALLOCATION;
     }
 
@@ -199,6 +201,7 @@ function defaultFitnessFunction(individual) {
           var cell2 = cells[value2];
 
           if (cell2.suite == cell.suite) {
+            // a detainee needs to go to a sepetate suite, but we have given them same one
             fitness += SCORE_SEPARATED_DETAINEES_SAME_SUITE;
             break;
           }
@@ -206,11 +209,13 @@ function defaultFitnessFunction(individual) {
       }
     }
   }
+  //we want to reduce the number of suites in use where possible
   fitness += suiteList.size * 100;
 
   return fitness + 1;
 }
 
+// Simple euclidian distance calculation
 function calculateDistanceToCell(detainee, cell) {
   var xspace = detainee.homeLocation[0] - cell.location[0];
   var yspace = detainee.homeLocation[1] - cell.location[1];
@@ -221,9 +226,8 @@ function calculateDistanceToCell(detainee, cell) {
 }
 
 function doIt() {
-  console.log(cells.length);
   var genAlg = new GeneticAlg(inputObject.length, defaultPopulationFunction, defaultFitnessFunction, randomNumbers);
-  genAlg.loopGeneration(20);
+  genAlg.loopGeneration(25);
   var fittest = genAlg.population[genAlg.fittestIndividual];
 
   var html = '<table border=1><tr><th>Index</th><th>Dry Cell Required?</th><th>Juvenile</th><th>Seperate Suites</th><th>Detainee Gender</th><th>Cell</th><th>Dry</th><th>Cell Gender</th></tr>';
